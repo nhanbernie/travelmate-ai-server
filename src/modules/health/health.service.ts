@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { InjectConnection } from '@nestjs/mongoose';
 import { Connection } from 'mongoose';
-
+import {
+  ResponseBuilder,
+  ApiResponse,
+} from '../../common/interfaces/response.interface';
 @Injectable()
 export class HealthService {
   constructor(@InjectConnection() private connection: Connection) {}
@@ -12,19 +15,20 @@ export class HealthService {
         throw new Error('Database connection not established');
       }
       await this.connection.db.admin().ping();
-      return {
-        status: 'ok',
-        database: 'connected',
-        timestamp: new Date().toISOString(),
-        uptime: process.uptime(),
-      };
+
+      return ResponseBuilder.success(
+        {
+          database: 'connected',
+          uptime: process.uptime(),
+        },
+        'Database connection is healthy',
+        200,
+      );
     } catch (error) {
-      return {
-        status: 'error',
+      return ResponseBuilder.error('Database connection is unhealthy', 500, {
         database: 'disconnected',
-        timestamp: new Date().toISOString(),
         error: error.message,
-      };
+      });
     }
   }
 
@@ -47,6 +51,7 @@ export class HealthService {
 
   getSystemHealth() {
     return {
+      uri: process.env.MONGODB_URI,
       uptime: process.uptime(),
       memory: {
         used: Math.round(process.memoryUsage().heapUsed / 1024 / 1024),

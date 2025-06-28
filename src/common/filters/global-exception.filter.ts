@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { Logger } from '@nestjs/common';
+import { ResponseBuilder } from '../interfaces/response.interface';
 
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
@@ -17,15 +18,19 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
 
-    const status =
-      exception instanceof HttpException
-        ? exception.getStatus()
-        : HttpStatus.INTERNAL_SERVER_ERROR;
+    let status = HttpStatus.INTERNAL_SERVER_ERROR;
+    let message = 'Internal server error';
 
-    const message =
-      exception instanceof HttpException
-        ? exception.message
-        : 'Internal server error';
+    if (exception instanceof HttpException) {
+      status = exception.getStatus();
+      message = exception.message;
+    } else if (this.isMongoError(exception)) {
+      // Handle MongoDB duplicate key error
+      status = HttpStatus.CONFLICT;
+      const field =
+        Object.keys((exception as any).keyPattern || {})[0] || 'field';
+      message = `${field} already exists`;
+    }
 
     // Log the error
     this.logger.error(
@@ -33,11 +38,16 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       exception instanceof Error ? exception.stack : 'Unknown error',
     );
 
-    response.status(status).json({
-      statusCode: status,
-      timestamp: new Date().toISOString(),
-      path: request.url,
-      message,
-    });
+    const errorResponse = ResponseBuilder.error(message, status);
+    response.status(status).json(errorResponse);
+  }
+
+  private isMongoError(exception: unknown): boolean {
+    return (
+      typeof exception === 'object' &&
+      exception !== null &&
+      'code' in exception &&
+      (exception as any).code === 11000
+    );
   }
 }

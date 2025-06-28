@@ -16,7 +16,6 @@
       "@/enums/*": ["./common/enums/*"],
       "@/config/*": ["./config/*"],
       "@/utils/*": ["./utils/*"],
-      "@/interfaces/*": ["./interfaces/*"],
       "@/services/*": ["./services/*"],
       "@/middlewares/*": ["./common/middlewares/*"],
       "@/pipes/*": ["./common/pipes/*"],
@@ -27,7 +26,8 @@
       "@/modules/*": ["./modules/*"],
       "@/database/*": ["./database/*"],
       "@/guards/*": ["./common/guards/*"],
-      "@/decorators/*": ["./common/decorators/*"]
+      "@/decorators/*": ["./common/decorators/*"],
+      "@/interfaces/*": ["./common/interfaces/*"]
     },
     "incremental": true,
     "skipLibCheck": true,
