@@ -1,11 +1,8 @@
 interface Config {
   port: number;
   database: {
-    host: string;
-    port: number;
-    username: string;
-    password: string;
-    database: string;
+    uri: string;
+    name: string;
   };
   jwt: {
     secret: string;
@@ -13,17 +10,18 @@ interface Config {
   };
 }
 
-export default (): Config => ({
-  port: parseInt(process.env.PORT || '3000', 10),
-  database: {
-    host: process.env.DATABASE_HOST || 'localhost',
-    port: parseInt(process.env.DATABASE_PORT || '5432', 10),
-    username: process.env.DATABASE_USERNAME || '',
-    password: process.env.DATABASE_PASSWORD || '',
-    database: process.env.DATABASE_NAME || '',
-  },
-  jwt: {
-    secret: process.env.JWT_SECRET || 'your-secret-key',
-    expiresIn: process.env.JWT_EXPIRES_IN || '1d',
-  },
-});
+export default (): Config => {
+  const mongoUri = `mongodb+srv://${process.env.MONGODB_USERNAME}:${process.env.MONGODB_PASSWORD}@${process.env.MONGODB_HOST}`;
+
+  return {
+    port: parseInt(process.env.PORT || '3000', 10),
+    database: {
+      uri: mongoUri!,
+      name: process.env.MONGODB_DATABASE!,
+    },
+    jwt: {
+      secret: process.env.JWT_SECRET!,
+      expiresIn: process.env.JWT_EXPIRES_IN!,
+    },
+  };
+};
