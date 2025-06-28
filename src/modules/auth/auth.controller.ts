@@ -1,7 +1,15 @@
-import { Controller, Post, UseGuards, Request, Body } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  UseGuards,
+  Request,
+  Body,
+  HttpException,
+  HttpStatus,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './guards/local-auth.guard';
-import { CreateUserDto } from '../users/dto/user.dto';
+import { CreateUserDto, LoginDto } from '../users/dto/user.dto';
 import { UsersService } from '../users/users.service';
 
 @Controller('auth')
@@ -13,8 +21,17 @@ export class AuthController {
 
   @Post('register')
   async register(@Body() createUserDto: CreateUserDto) {
-    const user = await this.usersService.create(createUserDto);
-    return this.authService.login(user);
+    try {
+      const user = await this.usersService.create(createUserDto);
+      return this.authService.login(user);
+    } catch (error) {
+      if (error.code === 11000) {
+        // MongoDB duplicate key error
+        const field = Object.keys(error.keyPattern)[0];
+        throw new HttpException(`${field} already exists`, HttpStatus.CONFLICT);
+      }
+      throw error;
+    }
   }
 
   @UseGuards(LocalAuthGuard)
