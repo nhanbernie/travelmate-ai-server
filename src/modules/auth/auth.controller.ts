@@ -6,6 +6,7 @@ import {
   Body,
   Ip,
   Headers,
+  BadRequestException,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './guards/local-auth.guard';
@@ -18,6 +19,10 @@ import {
   RefreshTokenRequestDto,
   RefreshTokenResponseDto,
 } from './dto/auth-response.dto';
+import {
+  GetIpAddress,
+  GetUserAgent,
+} from '../../common/decorators/request-info.decorator';
 
 @Controller('auth')
 export class AuthController {
@@ -61,6 +66,10 @@ export class AuthController {
   async refresh(
     @Body() refreshTokenDto: RefreshTokenRequestDto,
   ): Promise<RefreshTokenResponseDto> {
+    if (!refreshTokenDto || !refreshTokenDto.refresh_token) {
+      throw new BadRequestException('Refresh token is required');
+    }
+
     return this.authService.refreshAccessToken(refreshTokenDto.refresh_token);
   }
 
@@ -69,6 +78,10 @@ export class AuthController {
   async logout(
     @Body() refreshTokenDto: RefreshTokenRequestDto,
   ): Promise<{ message: string }> {
+    if (!refreshTokenDto || !refreshTokenDto.refresh_token) {
+      throw new BadRequestException('Refresh token is required');
+    }
+
     await this.authService.logout(refreshTokenDto.refresh_token);
     return { message: 'Logged out successfully' };
   }

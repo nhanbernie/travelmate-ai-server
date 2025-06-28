@@ -1,3 +1,5 @@
+import { IsNotEmpty, IsString } from 'class-validator';
+
 export interface UserResponseDto {
   id: string;
   username: string;
@@ -30,6 +32,8 @@ export interface RefreshTokenResponseDto {
   expires_in: number;
 }
 
-export interface RefreshTokenRequestDto {
+export class RefreshTokenRequestDto {
+  @IsNotEmpty({ message: 'Refresh token is required' })
+  @IsString({ message: 'Refresh token must be a string' })
   refresh_token: string;
 }

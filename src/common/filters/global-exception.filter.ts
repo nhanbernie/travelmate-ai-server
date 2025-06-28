@@ -30,6 +30,19 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       const field =
         Object.keys((exception as any).keyPattern || {})[0] || 'field';
       message = `${field} already exists`;
+    } else if (this.isJwtError(exception)) {
+      // Handle JWT related errors
+      status = HttpStatus.UNAUTHORIZED;
+      message = 'Invalid or expired token';
+    } else if (this.isValidationError(exception)) {
+      // Handle validation errors
+      status = HttpStatus.BAD_REQUEST;
+      message =
+        exception instanceof Error ? exception.message : 'Validation failed';
+    } else if (exception instanceof TypeError) {
+      // Handle TypeError (like property access on undefined)
+      status = HttpStatus.BAD_REQUEST;
+      message = 'Invalid request data';
     }
 
     // Log the error
@@ -48,6 +61,25 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       exception !== null &&
       'code' in exception &&
       (exception as any).code === 11000
+    );
+  }
+
+  private isJwtError(exception: unknown): boolean {
+    return (
+      exception instanceof Error &&
+      (exception.name === 'JsonWebTokenError' ||
+        exception.name === 'TokenExpiredError' ||
+        exception.name === 'NotBeforeError' ||
+        exception.message.includes('jwt'))
+    );
+  }
+
+  private isValidationError(exception: unknown): boolean {
+    return (
+      exception instanceof Error &&
+      (exception.message.includes('validation') ||
+        exception.message.includes('ValidationError') ||
+        exception.name === 'ValidationError')
     );
   }
 }
