@@ -61,7 +61,9 @@ UserSchema.pre('save', async function (next) {
   next();
 });
 
-// Index for performance
-UserSchema.index({ email: 1 });
-UserSchema.index({ username: 1 });
+UserSchema.index({ isActive: 1 });
+UserSchema.index({ roles: 1 });
 UserSchema.index({ createdAt: -1 });
+
+UserSchema.index({ email: 1, isActive: 1 });
+UserSchema.index({ username: 1, isActive: 1 });

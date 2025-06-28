@@ -1,11 +1,14 @@
 import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { APP_INTERCEPTOR, APP_FILTER } from '@nestjs/core';
 import { AppController } from '@/app.controller';
 import { AppService } from './app.service';
 import { DatabaseModule } from '@/database/database.module';
 import { LoggerMiddleware } from '@/middlewares/logger.middleware';
+import { ResponseInterceptor } from '@/common/interceptors/response.interceptor';
+import { GlobalExceptionFilter } from '@/common/filters/global-exception.filter';
 import configuration from '@/config/configuration';
-import { UsersModule, AuthModule, HealthModule } from '@/modules'
+import { UsersModule, AuthModule, HealthModule } from '@/modules';
 
 @Module({
   imports: [
@@ -14,13 +17,24 @@ import { UsersModule, AuthModule, HealthModule } from '@/modules'
       load: [configuration],
       envFilePath: [`.env.${process.env.NODE_ENV!}`, '.env'],
     }),
+
     DatabaseModule,
     UsersModule,
     AuthModule,
     HealthModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: ResponseInterceptor,
+    },
+    {
+      provide: APP_FILTER,
+      useClass: GlobalExceptionFilter,
+    },
+  ],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
