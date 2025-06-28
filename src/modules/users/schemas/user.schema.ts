@@ -1,10 +1,11 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
+import { ROLE } from '@/enums/auth.enums';
 
 export type UserDocument = User & Document;
 
 @Schema({
-  timestamps: true, // Tự động tạo createdAt, updatedAt
+  timestamps: true,
   collection: 'users',
 })
 export class User {
@@ -19,8 +20,8 @@ export class User {
 
   @Prop({
     type: [String],
-    default: ['user'],
-    enum: ['user', 'admin', 'moderator'],
+    default: [ROLE.USER],
+    enum: Object.values(ROLE),
   })
   roles: string[];
 
@@ -60,7 +61,7 @@ UserSchema.pre('save', async function (next) {
   next();
 });
 
-// Index cho performance
+// Index for performance
 UserSchema.index({ email: 1 });
 UserSchema.index({ username: 1 });
 UserSchema.index({ createdAt: -1 });

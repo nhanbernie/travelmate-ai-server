@@ -1,14 +1,12 @@
 import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { AppController } from './app.controller';
+import { ConfigModule } from '@nestjs/config';
+import { AppController } from '@/app.controller';
 import { AppService } from './app.service';
-import { DatabaseModule } from './database/database.module';
-import { UsersModule } from './modules/users/users.module';
-import { AuthModule } from './modules/auth/auth.module';
-import { LoggerMiddleware } from './common/middleware/logger.middleware';
-import configuration from './config/configuration';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { HealthModule } from './modules/health/health.module';
+import { DatabaseModule } from '@/database/database.module';
+import { LoggerMiddleware } from '@/middlewares/logger.middleware';
+import configuration from '@/config/configuration';
+import { UsersModule, AuthModule, HealthModule } from '@/modules'
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -16,10 +14,10 @@ import { HealthModule } from './modules/health/health.module';
       load: [configuration],
       envFilePath: [`.env.${process.env.NODE_ENV!}`, '.env'],
     }),
-    UsersModule,
     DatabaseModule,
-    HealthModule,
+    UsersModule,
     AuthModule,
+    HealthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
