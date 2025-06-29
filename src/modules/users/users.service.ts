@@ -144,4 +144,16 @@ export class UsersService {
       .limit(20)
       .exec();
   }
+
+  async updatePassword(userId: string, newPassword: string): Promise<void> {
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    const result = await this.userModel
+      .findByIdAndUpdate(userId, { password: hashedPassword }, { new: true })
+      .exec();
+
+    if (!result) {
+      throw new NotFoundException('User not found');
+    }
+  }
 }
