@@ -18,11 +18,10 @@ import {
   RegisterResponseDto,
   RefreshTokenRequestDto,
   RefreshTokenResponseDto,
+  ForgotPasswordRequestDto,
+  VerifyOTPRequestDto,
+  ResetPasswordRequestDto,
 } from './dto/auth-response.dto';
-import {
-  GetIpAddress,
-  GetUserAgent,
-} from '../../common/decorators/request-info.decorator';
 
 @Controller('auth')
 export class AuthController {
@@ -92,5 +91,43 @@ export class AuthController {
     const userId = req.user.sub;
     await this.authService.logoutAll(userId);
     return { message: 'Logged out from all devices successfully' };
+  }
+
+  @Post('forgot-password')
+  async forgotPassword(
+    @Body() forgotPasswordDto: ForgotPasswordRequestDto,
+    @Ip() ipAddress: string,
+    @Headers('user-agent') userAgent: string,
+  ): Promise<{ message: string }> {
+    return this.authService.sendPasswordResetOTP(
+      forgotPasswordDto.email,
+      ipAddress,
+      userAgent,
+    );
+  }
+
+  @Post('verify-otp')
+  async verifyOTP(
+    @Body() verifyOTPDto: VerifyOTPRequestDto,
+  ): Promise<{ message: string; token: string }> {
+    return this.authService.verifyPasswordResetOTP(
+      verifyOTPDto.email,
+      verifyOTPDto.otp,
+    );
+  }
+
+  @Post('reset-password')
+  async resetPassword(
+    @Body() resetPasswordDto: ResetPasswordRequestDto,
+    @Ip() ipAddress: string,
+    @Headers('user-agent') userAgent: string,
+  ): Promise<{ message: string }> {
+    return this.authService.resetPassword(
+      resetPasswordDto.email,
+      resetPasswordDto.otp,
+      resetPasswordDto.newPassword,
+      ipAddress,
+      userAgent,
+    );
   }
 }
