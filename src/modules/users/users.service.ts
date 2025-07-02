@@ -49,7 +49,7 @@ export class UsersService {
   async findAll(page: number = 1, limit: number = 10): Promise<User[]> {
     return this.userModel
       .find({ isActive: true })
-      .select('-password') // Exclude password from results
+      .select('-password')
       .skip((page - 1) * limit)
       .limit(limit)
       .sort({ createdAt: -1 })
@@ -57,10 +57,7 @@ export class UsersService {
   }
 
   async findOne(id: string): Promise<User | null> {
-    const user = await this.userModel
-      .findById(id)
-      .select('-password') // Exclude password
-      .exec();
+    const user = await this.userModel.findById(id).select('-password').exec();
 
     if (!user) {
       throw new NotFoundException('User not found');
@@ -80,7 +77,6 @@ export class UsersService {
   }
 
   async update(id: string, updateUserDto: UpdateUserDto): Promise<User | null> {
-    // Hash password nếu có update password
     if (updateUserDto.password) {
       updateUserDto.password = await bcrypt.hash(updateUserDto.password, 10);
     }
