@@ -9,7 +9,7 @@ async function bootstrap() {
     allowedHeaders: 'Content-Type, Accept, Authorization',
   });
   // NOTE: delete port when deploying to production
-  await app.listen(process.env.PORT ?? 3333, '0.0.0.0');
+  await app.listen(process.env.PORT ?? 3333);
   console.log(`Application is running on: ${await app.getUrl()}`);
 }
 bootstrap();

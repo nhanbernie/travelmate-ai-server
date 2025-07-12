@@ -59,7 +59,7 @@ export class AuthService {
     // Generate refresh token
     const refreshToken = await this.refreshTokenService.generateRefreshToken(
       user._id || user.id,
-      'web', // deviceInfo
+      'web', // deviceInfo  
       ipAddress,
       userAgent,
     );

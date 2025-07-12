@@ -260,22 +260,6 @@ EXPOSE 3333
 CMD ["npm", "run", "start:prod"]
 ```
 
-### Environment Variables for Production
-
-| Variable                 | Description              | Required | Default     |
-| ------------------------ | ------------------------ | -------- | ----------- |
-| `NODE_ENV`               | Environment mode         | No       | development |
-| `DATABASE_HOST`          | PostgreSQL host          | Yes      | localhost   |
-| `DATABASE_PORT`          | PostgreSQL port          | Yes      | 5432        |
-| `JWT_SECRET`             | JWT secret key           | Yes      | -           |
-| `JWT_ACCESS_EXPIRES_IN`  | Access token expiration  | No       | 15m         |
-| `JWT_REFRESH_EXPIRES_IN` | Refresh token expiration | No       | 7d          |
-| `PORT`                   | Server port              | No       | 3333        |
-| `MONGODB_URI`            | MongoDB connection URI   | Yes      | -           |
-| `MONGODB_DATABASE`       | MongoDB database name    | Yes      | -           |
-| `GMAIL_USER`             | Gmail username           | Yes      | -           |
-| `GMAIL_APP_PASSWORD`     | Gmail app password       | Yes      | -           |
-
 ## 🤝 Contributing
 
 1. Fork the repository

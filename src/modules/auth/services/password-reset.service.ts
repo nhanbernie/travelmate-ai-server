@@ -39,7 +39,7 @@ export class PasswordResetService {
     // Check if there's a recent OTP request (rate limiting)
     const recentOTP = await this.passwordResetModel.findOne({
       email,
-      createdAt: { $gt: new Date(Date.now() - 2 * 60 * 1000) }, // 2 minutes ago
+      createdAt: { $gt: new Date(Date.now() - 2 * 60 * 1000) }, // 1 minute ago
     });
 
     if (recentOTP) {
