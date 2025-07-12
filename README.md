@@ -319,4 +319,4 @@ This project is **UNLICENSED** - see the [LICENSE](LICENSE) file for details.
 
 ---
 
-**Built with ❤️ for the Travelmate AI Project**
+**Built with  ❤️ for the Travelmate AI Project**
