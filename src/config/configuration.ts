@@ -13,6 +13,12 @@ interface Config {
     user: string;
     password: string;
   };
+  openrouter: {
+    apiKey: string;
+    baseUrl: string;
+    siteUrl: string;
+    siteName: string;
+  };
 }
 
 export default (): Config => {
@@ -41,6 +47,13 @@ export default (): Config => {
     email: {
       user: process.env.GMAIL_USER!,
       password: process.env.GMAIL_APP_PASSWORD!,
+    },
+    openrouter: {
+      apiKey: process.env.OPENROUTER_API_KEY!,
+      baseUrl:
+        process.env.OPENROUTER_BASE_URL || 'https://openrouter.ai/api/v1',
+      siteUrl: process.env.OPENROUTER_SITE_URL || 'http://localhost:3333',
+      siteName: process.env.OPENROUTER_SITE_NAME || 'TravelMate AI',
     },
   };
 };
