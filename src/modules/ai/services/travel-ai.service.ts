@@ -99,9 +99,7 @@ Please provide detailed insights that would be helpful for travel planning.`;
   ): Promise<ChatCompletionResponse> {
     const prompt = this.buildRecommendationsPrompt(destination, category);
 
-    this.logger.log(
-      `Getting ${category} recommendations for: ${destination}`,
-    );
+    this.logger.log(`Getting ${category} recommendations for: ${destination}`);
 
     return this.openRouterService.simpleTextCompletion(prompt, model, 0.5);
   }

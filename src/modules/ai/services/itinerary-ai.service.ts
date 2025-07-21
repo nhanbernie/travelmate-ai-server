@@ -1,9 +1,12 @@
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { OpenRouterService } from './openrouter.service';
 import { Itinerary, ItineraryDocument } from '../schemas/itinerary.schema';
-import { ItineraryDay, ItineraryDayDocument } from '../schemas/itinerary-day.schema';
+import {
+  ItineraryDay,
+  ItineraryDayDocument,
+} from '../schemas/itinerary-day.schema';
 import { Activity, ActivityDocument } from '../schemas/activity.schema';
 import {
   GenerateItineraryDto,
@@ -19,8 +22,10 @@ export class ItineraryAIService {
 
   constructor(
     private readonly openRouterService: OpenRouterService,
-    @InjectModel(Itinerary.name) private itineraryModel: Model<ItineraryDocument>,
-    @InjectModel(ItineraryDay.name) private itineraryDayModel: Model<ItineraryDayDocument>,
+    @InjectModel(Itinerary.name)
+    private itineraryModel: Model<ItineraryDocument>,
+    @InjectModel(ItineraryDay.name)
+    private itineraryDayModel: Model<ItineraryDayDocument>,
     @InjectModel(Activity.name) private activityModel: Model<ActivityDocument>,
   ) {}
 
@@ -34,14 +39,22 @@ export class ItineraryAIService {
       // Calculate number of days
       const startDate = new Date(generateDto.startDate);
       const endDate = new Date(generateDto.endDate);
-      const numberOfDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+      const numberOfDays =
+        Math.ceil(
+          (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24),
+        ) + 1;
 
       if (numberOfDays <= 0 || numberOfDays > 30) {
-        throw new BadRequestException('Invalid date range. Maximum 30 days allowed.');
+        throw new BadRequestException(
+          'Invalid date range. Maximum 30 days allowed.',
+        );
       }
 
       // Generate AI prompt
-      const prompt = this.buildStructuredItineraryPrompt(generateDto, numberOfDays);
+      const prompt = this.buildStructuredItineraryPrompt(
+        generateDto,
+        numberOfDays,
+      );
 
       // Get AI response
       const aiResponse = await this.openRouterService.simpleTextCompletion(
@@ -54,7 +67,11 @@ export class ItineraryAIService {
       const aiData = this.parseAIResponse(aiResponse.content);
 
       // Save to database
-      const savedItinerary = await this.saveItineraryToDatabase(userId, generateDto, aiData);
+      const savedItinerary = await this.saveItineraryToDatabase(
+        userId,
+        generateDto,
+        aiData,
+      );
 
       return savedItinerary;
     } catch (error) {
@@ -150,29 +167,31 @@ Generate the JSON response now:`;
     try {
       // Clean the response - remove any markdown formatting or extra text
       let cleanContent = content.trim();
-      
+
       // Find JSON object boundaries
       const jsonStart = cleanContent.indexOf('{');
       const jsonEnd = cleanContent.lastIndexOf('}') + 1;
-      
+
       if (jsonStart === -1 || jsonEnd === 0) {
         throw new Error('No JSON object found in AI response');
       }
-      
+
       cleanContent = cleanContent.substring(jsonStart, jsonEnd);
-      
+
       const parsed = JSON.parse(cleanContent);
-      
+
       // Validate required fields
       if (!parsed.summary || !parsed.days || !Array.isArray(parsed.days)) {
         throw new Error('Invalid AI response structure');
       }
-      
+
       return parsed as AIItineraryStructure;
     } catch (error) {
       this.logger.error('Failed to parse AI response', error.stack);
       this.logger.error('AI Response content:', content);
-      throw new BadRequestException('Failed to parse AI response. Please try again.');
+      throw new BadRequestException(
+        'Failed to parse AI response. Please try again.',
+      );
     }
   }
 
@@ -183,7 +202,7 @@ Generate the JSON response now:`;
   ): Promise<ItineraryResponseDto> {
     // Create main itinerary
     const itinerary = new this.itineraryModel({
-      userId,
+      userId: new Types.ObjectId(userId),
       destination: generateDto.destination,
       startDate: new Date(generateDto.startDate),
       endDate: new Date(generateDto.endDate),
@@ -201,7 +220,7 @@ Generate the JSON response now:`;
     const savedItinerary = await itinerary.save();
 
     // Create days and activities
-    const days = [];
+    const days: any[] = [];
     for (const dayData of aiData.days) {
       const itineraryDay = new this.itineraryDayModel({
         itineraryId: savedItinerary._id,
@@ -216,7 +235,7 @@ Generate the JSON response now:`;
       const savedDay = await itineraryDay.save();
 
       // Create activities for this day
-      const activities = [];
+      const activities: any[] = [];
       for (const activityData of dayData.activities) {
         const activity = new this.activityModel({
           dayId: savedDay._id,
@@ -263,7 +282,7 @@ Generate the JSON response now:`;
     }
 
     return {
-      itineraryId: savedItinerary._id.toString(),
+      itineraryId: (savedItinerary._id as any).toString(),
       destination: savedItinerary.destination,
       startDate: generateDto.startDate,
       endDate: generateDto.endDate,
@@ -278,8 +297,8 @@ Generate the JSON response now:`;
       temperatureMax: savedItinerary.temperatureMax,
       days,
       totalEstimatedCost: aiData.totalEstimatedCost || 0,
-      createdAt: savedItinerary.createdAt,
-      updatedAt: savedItinerary.updatedAt,
+      createdAt: (savedItinerary as any).createdAt,
+      updatedAt: (savedItinerary as any).updatedAt,
     };
   }
 
@@ -296,11 +315,13 @@ Generate the JSON response now:`;
       .sort({ createdAt: -1 })
       .exec();
 
-    const result = [];
+    const result: any[] = [];
     for (const itinerary of itineraries) {
-      const days = await this.getItineraryDays(itinerary._id.toString());
+      const days = await this.getItineraryDays(
+        (itinerary._id as any).toString(),
+      );
       result.push({
-        itineraryId: itinerary._id.toString(),
+        itineraryId: (itinerary._id as any).toString(),
         destination: itinerary.destination,
         startDate: itinerary.startDate.toISOString().split('T')[0],
         endDate: itinerary.endDate.toISOString().split('T')[0],
@@ -314,11 +335,17 @@ Generate the JSON response now:`;
         temperatureMin: itinerary.temperatureMin,
         temperatureMax: itinerary.temperatureMax,
         days,
-        totalEstimatedCost: days.reduce((total, day) => 
-          total + day.activities.reduce((dayTotal, activity) => dayTotal + (activity.estimatedCost || 0), 0), 0
+        totalEstimatedCost: days.reduce(
+          (total, day) =>
+            total +
+            day.activities.reduce(
+              (dayTotal, activity) => dayTotal + (activity.estimatedCost || 0),
+              0,
+            ),
+          0,
         ),
-        createdAt: itinerary.createdAt,
-        updatedAt: itinerary.updatedAt,
+        createdAt: (itinerary as any).createdAt,
+        updatedAt: (itinerary as any).updatedAt,
       });
     }
 
@@ -331,7 +358,7 @@ Generate the JSON response now:`;
       .sort({ dayNumber: 1 })
       .exec();
 
-    const result = [];
+    const result: any[] = [];
     for (const day of days) {
       const activities = await this.activityModel
         .find({ dayId: day._id })
@@ -345,7 +372,7 @@ Generate the JSON response now:`;
         temperatureMin: day.temperatureMin,
         temperatureMax: day.temperatureMax,
         chanceOfRain: day.chanceOfRain,
-        activities: activities.map(activity => ({
+        activities: activities.map((activity) => ({
           title: activity.title,
           description: activity.description,
           location: activity.location,
