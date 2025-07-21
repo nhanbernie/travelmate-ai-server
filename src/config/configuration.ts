@@ -16,11 +16,19 @@ interface Config {
 }
 
 export default (): Config => {
-  // NOTE: when run dev use last mongoDB variables and when use another env un comment first mongoUri variable
-  const mongoUri = `mongodb+srv://${process.env.MONGODB_USERNAME}:${process.env.MONGODB_PASSWORD}@${process.env.MONGODB_HOST}${process.env.MONGODB_DATABASE}?retryWrites=true&w=majority`;
-  // const mongoUri = `${process.env.MONGODB_URI}${process.env.MONGODB_DATABASE}`;
+  // Auto detect environment and choose appropriate MongoDB URI
+  const isProduction = process.env.NODE_ENV === 'production';
+
+  let mongoUri: string;
+
+  if (isProduction || process.env.MONGODB_USERNAME) {
+    mongoUri = `mongodb+srv://${process.env.MONGODB_USERNAME}:${process.env.MONGODB_PASSWORD}@${process.env.MONGODB_HOST}${process.env.MONGODB_DATABASE}?retryWrites=true&w=majority`;
+  } else {
+    mongoUri = `${process.env.MONGODB_URI}${process.env.MONGODB_DATABASE}`;
+  }
+
   return {
-    port: parseInt(process.env.PORT || '3000', 10),
+    port: parseInt(process.env.PORT || '3333', 10),
     database: {
       uri: mongoUri!,
       name: process.env.MONGODB_DATABASE!,
