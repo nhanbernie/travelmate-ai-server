@@ -7,6 +7,9 @@ A NestJS-based backend server for the Travelmate AI application that provides in
 - **Authentication & Authorization**: JWT-based authentication with role-based access control
 - **User Management**: Complete user registration, login, and profile management
 - **Password Reset**: Secure email-based password reset functionality
+- **AI Integration**: OpenRouter API integration for AI-powered travel features
+- **Travel Planning**: AI-generated travel plans, itineraries, and recommendations
+- **Image Analysis**: AI-powered destination image analysis
 - **Database Integration**: MongoDB with Mongoose ODM and PostgreSQL with TypeORM
 - **Email Services**: Automated email notifications using Gmail SMTP
 - **Health Checks**: Application health monitoring endpoints
@@ -18,6 +21,7 @@ A NestJS-based backend server for the Travelmate AI application that provides in
 
 - **Framework**: NestJS (Node.js)
 - **Language**: TypeScript
+- **AI Integration**: OpenRouter API with multiple AI models
 - **Databases**:
   - MongoDB (Primary database with Mongoose)
   - PostgreSQL (Additional database with TypeORM)
@@ -46,6 +50,10 @@ src/
 ├── config/                   # Configuration files
 ├── database/                 # Database configuration
 ├── modules/                  # Feature modules
+│   ├── ai/                   # AI integration module
+│   │   ├── dto/              # AI request/response DTOs
+│   │   ├── interfaces/       # OpenRouter API interfaces
+│   │   └── services/         # AI and travel planning services
 │   ├── auth/                 # Authentication module
 │   │   ├── dto/              # Data transfer objects
 │   │   ├── guards/           # JWT and local auth guards
@@ -112,6 +120,12 @@ MONGODB_DATABASE=travelmateai
 # Email Configuration (Gmail)
 GMAIL_USER=your-gmail@gmail.com
 GMAIL_APP_PASSWORD=your-16-character-app-password
+
+# OpenRouter AI Configuration
+OPENROUTER_API_KEY=sk-or-v1-your-api-key-here
+OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
+OPENROUTER_SITE_URL=http://localhost:3333
+OPENROUTER_SITE_NAME=TravelMate AI
 ```
 
 ### 4. Database Setup
@@ -170,6 +184,21 @@ The application will be available at `http://localhost:3333`
 | ------ | ---------------- | ------------------- | --------- |
 | `GET`  | `/users/profile` | Get user profile    | ✅        |
 | `PUT`  | `/users/profile` | Update user profile | ✅        |
+
+### 🤖 AI Services
+
+| Method | Endpoint                       | Description                                       | Protected |
+| ------ | ------------------------------ | ------------------------------------------------- | --------- |
+| `POST` | `/ai/chat`                     | Advanced chat completion with multi-modal support | ✅        |
+| `POST` | `/ai/text`                     | Simple text completion                            | ✅        |
+| `POST` | `/ai/image-analysis`           | Analyze images with custom questions              | ✅        |
+| `POST` | `/ai/travel/plan`              | Generate comprehensive travel plans               | ✅        |
+| `GET`  | `/ai/travel/destination-info`  | Get destination information                       | ✅        |
+| `POST` | `/ai/travel/destination-image` | Analyze destination images                        | ✅        |
+| `GET`  | `/ai/travel/itinerary`         | Generate day-by-day itineraries                   | ✅        |
+| `GET`  | `/ai/travel/recommendations`   | Get local recommendations                         | ✅        |
+| `GET`  | `/ai/travel/budget`            | Get budget estimates                              | ✅        |
+| `GET`  | `/ai/health`                   | Check AI service health                           | ✅        |
 
 ### 🏥 Health
 
