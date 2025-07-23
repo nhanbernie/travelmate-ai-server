@@ -4,7 +4,6 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { AIController } from './ai.controller';
 import { ItineraryController } from './controllers/itinerary.controller';
 import { OpenRouterService } from './services/openrouter.service';
-import { TravelAIService } from './services/travel-ai.service';
 import { ItineraryAIService } from './services/itinerary-ai.service';
 import { Itinerary, ItinerarySchema } from './schemas/itinerary.schema';
 import {
@@ -23,7 +22,7 @@ import { Activity, ActivitySchema } from './schemas/activity.schema';
     ]),
   ],
   controllers: [AIController, ItineraryController],
-  providers: [OpenRouterService, TravelAIService, ItineraryAIService],
-  exports: [OpenRouterService, TravelAIService, ItineraryAIService],
+  providers: [OpenRouterService, ItineraryAIService],
+  exports: [OpenRouterService, ItineraryAIService],
 })
 export class AIModule {}

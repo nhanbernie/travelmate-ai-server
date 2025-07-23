@@ -147,11 +147,11 @@ export class ItineraryAIService {
 - "other"
 
 **Guidelines:**
-1. Include 4-8 activities per day
+1. Include 2-6 activities per day
 2. Consider realistic timing and travel between locations
 3. Include meals (breakfast, lunch, dinner) as dining activities
 4. Add transport activities for longer distances
-5. Provide realistic cost estimates in USD
+5. Provide realistic cost estimates in USD or VND
 6. Priority: 1=must-do, 2=recommended, 3=optional, 4=if-time-permits, 5=backup
 7. Include practical information like booking URLs and contact info when relevant
 8. Consider the trip type (budget/mid-range/luxury) for activity selection and costs
@@ -310,51 +310,183 @@ Generate the JSON response now:`;
   }
 
   async getUserItineraries(userId: string): Promise<ItineraryResponseDto[]> {
+    return this.getItinerariesByUserId(userId);
+  }
+
+  /**
+   * Get all itineraries for a specific user by their ID
+   * @param userId The ID of the user whose itineraries to retrieve
+   * @returns Array of itinerary response DTOs
+   */
+  async getItinerariesByUserId(
+    userId: string,
+  ): Promise<ItineraryResponseDto[]> {
+    // Validate if userId is a valid ObjectId
+    if (!Types.ObjectId.isValid(userId)) {
+      throw new Error(`Invalid userId format: ${userId}`);
+    }
+
+    // Convert string userId to ObjectId for proper querying
+    const userObjectId = new Types.ObjectId(userId);
     const itineraries = await this.itineraryModel
-      .find({ userId })
+      .find({ userId: userObjectId })
       .sort({ createdAt: -1 })
       .exec();
 
-    const result: any[] = [];
-    for (const itinerary of itineraries) {
-      const days = await this.getItineraryDays(
-        (itinerary._id as any).toString(),
-      );
-      result.push({
-        itineraryId: (itinerary._id as any).toString(),
-        destination: itinerary.destination,
-        startDate: itinerary.startDate.toISOString().split('T')[0],
-        endDate: itinerary.endDate.toISOString().split('T')[0],
-        numberOfTravelers: itinerary.numberOfTravelers,
-        preferences: itinerary.preferences,
-        tripType: itinerary.tripType as TripType,
-        aiSummary: itinerary.aiSummary,
-        aiSuggestions: itinerary.aiSuggestions,
-        weatherSummary: itinerary.weatherSummary,
-        chanceOfRain: itinerary.chanceOfRain,
-        temperatureMin: itinerary.temperatureMin,
-        temperatureMax: itinerary.temperatureMax,
-        days,
-        totalEstimatedCost: days.reduce(
-          (total, day) =>
-            total +
-            day.activities.reduce(
-              (dayTotal, activity) => dayTotal + (activity.estimatedCost || 0),
-              0,
-            ),
-          0,
-        ),
-        createdAt: (itinerary as any).createdAt,
-        updatedAt: (itinerary as any).updatedAt,
-      });
-    }
+    // Map itineraries to response format (only basic itinerary data)
+    const result: ItineraryResponseDto[] = itineraries.map((itinerary) => ({
+      itineraryId: (itinerary._id as any).toString(),
+      destination: itinerary.destination,
+      startDate: itinerary.startDate.toISOString().split('T')[0],
+      endDate: itinerary.endDate.toISOString().split('T')[0],
+      numberOfTravelers: itinerary.numberOfTravelers,
+      preferences: itinerary.preferences || [],
+      tripType: itinerary.tripType as TripType,
+      aiSummary: itinerary.aiSummary || '',
+      aiSuggestions: itinerary.aiSuggestions || [],
+      weatherSummary: itinerary.weatherSummary || '',
+      chanceOfRain: itinerary.chanceOfRain || 0,
+      temperatureMin: itinerary.temperatureMin || 20,
+      temperatureMax: itinerary.temperatureMax || 30,
+      days: [], // Empty array since we're not loading days
+      totalEstimatedCost: 0, // Set to 0 since we're not calculating from activities
+      createdAt: (itinerary as any).createdAt,
+      updatedAt: (itinerary as any).updatedAt,
+    }));
 
     return result;
   }
 
-  private async getItineraryDays(itineraryId: string) {
+  /**
+   * Get a single itinerary with full details (including days and activities)
+   * @param itineraryId The ID of the itinerary to retrieve
+   * @param userId The ID of the user (for authorization)
+   * @returns Full itinerary details with days and activities
+   */
+  async getItineraryById(
+    itineraryId: string,
+    userId: string,
+  ): Promise<ItineraryResponseDto> {
+    // Validate if itineraryId is a valid ObjectId
+    if (!Types.ObjectId.isValid(itineraryId)) {
+      throw new Error(`Invalid itineraryId format: ${itineraryId}`);
+    }
+
+    // Validate if userId is a valid ObjectId
+    if (!Types.ObjectId.isValid(userId)) {
+      throw new Error(`Invalid userId format: ${userId}`);
+    }
+
+    const itineraryObjectId = new Types.ObjectId(itineraryId);
+    const userObjectId = new Types.ObjectId(userId);
+
+    // Find the itinerary and check ownership
+    const itinerary = await this.itineraryModel
+      .findOne({ _id: itineraryObjectId, userId: userObjectId })
+      .exec();
+
+    if (!itinerary) {
+      throw new Error(
+        'Itinerary not found or you do not have permission to access it',
+      );
+    }
+
+    // Get full days and activities data
+    const days = await this.getItineraryDays(itineraryId);
+
+    // Calculate total cost from activities
+    const totalEstimatedCost = days.reduce(
+      (total: number, day: any) =>
+        total +
+        day.activities.reduce(
+          (dayTotal: number, activity: any) =>
+            dayTotal + (activity.estimatedCost || 0),
+          0,
+        ),
+      0,
+    );
+
+    return {
+      itineraryId: (itinerary._id as any).toString(),
+      destination: itinerary.destination,
+      startDate: itinerary.startDate.toISOString().split('T')[0],
+      endDate: itinerary.endDate.toISOString().split('T')[0],
+      numberOfTravelers: itinerary.numberOfTravelers,
+      preferences: itinerary.preferences || [],
+      tripType: itinerary.tripType as TripType,
+      aiSummary: itinerary.aiSummary || '',
+      aiSuggestions: itinerary.aiSuggestions || [],
+      weatherSummary: itinerary.weatherSummary || '',
+      chanceOfRain: itinerary.chanceOfRain || 0,
+      temperatureMin: itinerary.temperatureMin || 20,
+      temperatureMax: itinerary.temperatureMax || 30,
+      days,
+      totalEstimatedCost,
+      createdAt: (itinerary as any).createdAt,
+      updatedAt: (itinerary as any).updatedAt,
+    };
+  }
+
+  /**
+   * Delete an itinerary and all related data (days and activities)
+   * @param itineraryId The ID of the itinerary to delete
+   * @param userId The ID of the user (for authorization)
+   * @returns Success message
+   */
+  async deleteItinerary(
+    itineraryId: string,
+    userId: string,
+  ): Promise<{ message: string }> {
+    // Validate if itineraryId is a valid ObjectId
+    if (!Types.ObjectId.isValid(itineraryId)) {
+      throw new Error(`Invalid itineraryId format: ${itineraryId}`);
+    }
+
+    // Validate if userId is a valid ObjectId
+    if (!Types.ObjectId.isValid(userId)) {
+      throw new Error(`Invalid userId format: ${userId}`);
+    }
+
+    const itineraryObjectId = new Types.ObjectId(itineraryId);
+    const userObjectId = new Types.ObjectId(userId);
+
+    // Check if itinerary exists and belongs to the user
+    const itinerary = await this.itineraryModel
+      .findOne({ _id: itineraryObjectId, userId: userObjectId })
+      .exec();
+
+    if (!itinerary) {
+      throw new Error(
+        'Itinerary not found or you do not have permission to delete it',
+      );
+    }
+
+    // Get all days for this itinerary
     const days = await this.itineraryDayModel
-      .find({ itineraryId })
+      .find({ itineraryId: itineraryObjectId })
+      .exec();
+
+    // Delete all activities for all days
+    for (const day of days) {
+      await this.activityModel.deleteMany({ dayId: day._id }).exec();
+    }
+
+    // Delete all days for this itinerary
+    await this.itineraryDayModel
+      .deleteMany({ itineraryId: itineraryObjectId })
+      .exec();
+
+    // Delete the itinerary itself
+    await this.itineraryModel.deleteOne({ _id: itineraryObjectId }).exec();
+
+    return { message: 'Itinerary deleted successfully' };
+  }
+
+  private async getItineraryDays(itineraryId: string) {
+    // Convert string itineraryId to ObjectId for proper querying
+    const itineraryObjectId = new Types.ObjectId(itineraryId);
+    const days = await this.itineraryDayModel
+      .find({ itineraryId: itineraryObjectId })
       .sort({ dayNumber: 1 })
       .exec();
 

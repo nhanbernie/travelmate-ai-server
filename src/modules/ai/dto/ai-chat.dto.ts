@@ -122,29 +122,3 @@ export class ImageAnalysisRequestDto {
   @IsString()
   model?: string = 'google/gemini-2.0-flash-001';
 }
-
-export class TravelPlanRequestDto {
-  @IsNotEmpty()
-  @IsString()
-  destination: string;
-
-  @IsOptional()
-  @IsString()
-  duration?: string;
-
-  @IsOptional()
-  @IsString()
-  budget?: string;
-
-  @IsOptional()
-  @IsString()
-  interests?: string;
-
-  @IsOptional()
-  @IsString()
-  travelStyle?: string;
-
-  @IsOptional()
-  @IsString()
-  model?: string = 'google/gemini-2.0-flash-001';
-}

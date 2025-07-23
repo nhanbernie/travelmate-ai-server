@@ -2,6 +2,7 @@ import {
   Controller,
   Post,
   Get,
+  Delete,
   Body,
   UseGuards,
   Request,
@@ -82,6 +83,19 @@ export class ItineraryController {
     }
   }
 
+  @Get('user/:userId/itineraries')
+  async getAllItinerariesByUserId(
+    @Param('userId') userId: string,
+  ): Promise<ItineraryResponseDto[]> {
+    try {
+      return await this.itineraryAIService.getItinerariesByUserId(userId);
+    } catch (error) {
+      throw new BadRequestException(
+        `Failed to fetch itineraries for user: ${error.message}`,
+      );
+    }
+  }
+
   @Get(':itineraryId')
   async getItinerary(
     @Request() req,
@@ -89,23 +103,56 @@ export class ItineraryController {
   ): Promise<ItineraryResponseDto> {
     try {
       const userId = req.user.id;
-      const itineraries =
-        await this.itineraryAIService.getUserItineraries(userId);
 
-      const itinerary = itineraries.find(
-        (it) => it.itineraryId === itineraryId,
-      );
-      if (!itinerary) {
-        throw new NotFoundException('Itinerary not found');
+      if (!itineraryId || itineraryId.trim() === '') {
+        throw new BadRequestException('Itinerary ID is required');
       }
 
-      return itinerary;
+      return await this.itineraryAIService.getItineraryById(
+        itineraryId,
+        userId,
+      );
     } catch (error) {
-      if (error instanceof NotFoundException) {
+      if (error instanceof BadRequestException) {
         throw error;
+      }
+      if (
+        error.message.includes('not found') ||
+        error.message.includes('permission')
+      ) {
+        throw new NotFoundException(error.message);
       }
       throw new BadRequestException(
         `Failed to fetch itinerary: ${error.message}`,
+      );
+    }
+  }
+
+  @Delete(':itineraryId')
+  async deleteItinerary(
+    @Request() req,
+    @Param('itineraryId') itineraryId: string,
+  ): Promise<{ message: string }> {
+    try {
+      const userId = req.user.id;
+
+      if (!itineraryId || itineraryId.trim() === '') {
+        throw new BadRequestException('Itinerary ID is required');
+      }
+
+      return await this.itineraryAIService.deleteItinerary(itineraryId, userId);
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      if (
+        error.message.includes('not found') ||
+        error.message.includes('permission')
+      ) {
+        throw new NotFoundException(error.message);
+      }
+      throw new BadRequestException(
+        `Failed to delete itinerary: ${error.message}`,
       );
     }
   }
