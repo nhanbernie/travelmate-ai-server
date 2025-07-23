@@ -8,7 +8,13 @@ import { LoggerMiddleware } from '@/middlewares/logger.middleware';
 import { ResponseInterceptor } from '@/common/interceptors/response.interceptor';
 import { GlobalExceptionFilter } from '@/common/filters/global-exception.filter';
 import configuration from '@/config/configuration';
-import { UsersModule, AuthModule, HealthModule, AIModule } from '@/modules';
+import {
+  UsersModule,
+  AuthModule,
+  HealthModule,
+  AIModule,
+  CommunityModule,
+} from '@/modules';
 
 @Module({
   imports: [
@@ -23,6 +29,7 @@ import { UsersModule, AuthModule, HealthModule, AIModule } from '@/modules';
     AuthModule,
     HealthModule,
     AIModule,
+    CommunityModule,
   ],
   controllers: [AppController],
   providers: [
